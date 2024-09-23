@@ -1,0 +1,83 @@
+# docs:
+# https://docs.docker.com/compose/multiple-compose-files/merge/
+# https://docs.docker.com/reference/compose-file/merge/
+
+# !!!reset value does not work as expected on CI/CD pipeline - TeamCity!!!
+# https://docs.docker.com/reference/compose-file/merge/#reset-value
+
+version: '3.8'
+
+services:
+  app:
+    environment:
+      - DEBUG=true
+      - API_KEY=your_api_key_here
+    volumes:
+      - ./app:/usr/share/nginx/html
+      - ./default.conf:/etc/nginx/conf.d/default.conf
+
+    #    docker compose up
+    #    env file /Users/ziga/Documents/docker-compose-override-test/.env not found: stat /Users/ziga/Documents/docker-compose-override-test/.env: no such file or directory
+    #    env_file:
+    #      - []
+
+    #    env_file: []
+    #    docker compose up
+    #    env file /Users/ziga/Documents/docker-compose-override-test/.env not found: stat /Users/ziga/Documents/docker-compose-override-test/.env: no such file or directory
+
+
+    #    env_file: null
+    #    docker compose -f docker-compose-override.yml up
+    #    validating /Users/ziga/Documents/docker-compose-override-test/docker-compose-override.yml: services.app.env_file must be a string
+    #    docker-compose -f docker-compose.yml -f docker-compose.override.yml up
+    #    stat /Users/ziga/Documents/docker-compose-override-test/docker-compose.override.yml: no such file or directory
+
+
+    #    env_file: []
+    #    docker-compose -f docker-compose.yml -f docker-compose.override.yml up
+    #    env file /Users/ziga/Documents/docker-compose-override-test/.env not found: stat /Users/ziga/Documents/docker-compose-override-test/.env: no such file or directory
+
+
+    #    env_file:
+    #      - .env.override
+    #    the problem is there is no .env file in the directory
+    #    docker-compose -f docker-compose.yml -f docker-compose.override.yml up
+    #    env file /Users/ziga/Documents/docker-compose-override-test/.env not found:
+    #    stat /Users/ziga/Documents/docker-compose-override-test/.env: no such file or directory
+
+
+    #   WORKED!!
+    #   # https://docs.docker.com/reference/compose-file/merge/#reset-value
+    env_file: !reset []
+
+
+
+# Main issue not is that yaml constructor cant parce '!reset'
+# error is coming from the YAML parser's constructor,
+# parser encountered a tag !reset in your YAML file, but it doesn't know how to handle or interpret this tag.
+# yaml.constructor.ConstructorError: could not determine a constructor for the tag '!reset'
+
+# mac os version of docker-compose - where it worked
+#  docker-compose --version
+#  Docker Compose version v2.24.6-desktop.1
+
+
+# container in which is teamcity-agent running
+#zigap@masterdocker:~$ docker exec -it teamcity-agent /bin/bash
+#root@3c5b2ccafc7a:/# docker-compose version
+#docker-compose version 1.28.5, build c4eb3a1f
+#teamcity build logs:
+#14:17:13 Step 1/6: docker-compose version (Command Line)
+#14:17:13   Starting: /opt/buildagent/temp/agentTmp/custom_script5154139588048434790
+#14:17:13   in directory: /opt/buildagent/work/7567c0b8dc2e39a
+#14:17:13   docker-compose version 1.28.5, build c4eb3a1f
+
+
+#docker compose version on docker server
+#zigap@masterdocker:~$ docker-compose --version
+#docker-compose version 1.21.0, build unknown
+
+
+#updated docker compose version on my mac os
+#  docker-compose --version
+#  Docker Compose version 2.29.5
